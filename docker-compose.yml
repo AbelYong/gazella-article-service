@@ -1,0 +1,17 @@
+services:
+  article-service:
+    build:
+      context: .
+      target: development
+    container_name: article_service
+    restart: unless-stopped
+    ports:
+      - "7000:7000"
+    env_file:
+      - .env
+    networks:
+      - gazella-net
+
+networks:
+  gazella-net:
+    external: true

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option csharp_namespace = "ArticleService.Protos";
+
+package draft;
+
+service DraftService {
+  rpc SubmitDraft (SubmitDraftRequest) returns (SubmitDraftResponse);
+}
+
+message SubmitDraftRequest {
+  string title = 1;
+  string cover_uri = 2;
+  string summary = 3;
+  string category_id = 4;
+  string author_id = 5;
+  string content = 6;
+}
+
+message SubmitDraftResponse {
+  string article_id = 1;
+  string message = 2;
+}

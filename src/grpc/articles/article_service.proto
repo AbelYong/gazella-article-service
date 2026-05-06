@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option csharp_namespace = "ArticleService.Protos";
+
+package article;
+
+service ArticleService {
+  rpc GetCategories (GetCategoriesRequest) returns (GetCategoriesResponse);
+}
+
+message GetCategoriesRequest { }
+
+message Category {
+  string id = 1;
+  string name = 2;
+}
+
+message GetCategoriesResponse {
+  repeated Category categories = 1;
+}
