@@ -1,12 +1,26 @@
 import { Router } from "express"
 import { requireAuth } from "./validators/auth_validator.js";
 import { asyncHandler } from "./handlers/async_handler.js";
-import { validateBody } from "./validators/request_validator.js";
-import { DraftSubmissionSchema } from "./schemas/draft_schema.js";
-import { submitDraft } from "./controllers/draft_controller.js";
-import { getCategories } from "./controllers/article_controller.js";
+import { validateBody, validateParams } from "./validators/request_validator.js";
+import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpdateSchema } from "./schemas/draft_schema.js";
+import { makeGetCategoriesController, makeGetMyArticlesController } from "./controllers/article_controller.js";
+import { executeGrpcCall } from "./grpc/grpc_util.js";
+import { ArticleGrpcClient } from "./grpc/articles/client.js";
+import { DraftGrpcClient } from "./grpc/drafts/client.js";
+import { makePublishDraftController, makeSubmitDraftController, makeUpdateDraftController } from "./controllers/draft_controller.js";
 
 const router = Router();
+
+const dataServiceUrl = process.env["DATA_SERVICE_URL"] || "localhost:8080";
+
+const articleClient = new ArticleGrpcClient(dataServiceUrl);
+const draftClient = new DraftGrpcClient(dataServiceUrl);
+
+const getCategories = makeGetCategoriesController(articleClient, executeGrpcCall);
+const getMyArticles = makeGetMyArticlesController(articleClient, executeGrpcCall);
+const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
+const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
+const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
 
 /**
  * @openapi
@@ -206,5 +220,11 @@ router.get("/categories", asyncHandler(getCategories));
  *                   example: "The database is not available, it took to long to respond or another internal issue"
  */
 router.post("/drafts", requireAuth, validateBody(DraftSubmissionSchema), asyncHandler(submitDraft));
+
+router.patch("/drafts/:draftId", requireAuth, validateParams(DraftIdSchema), validateBody(DraftUpdateSchema), asyncHandler(updateDraft));
+
+router.post("/drafts/:draftId/publications", requireAuth, validateParams(DraftIdSchema), validateBody(DraftPublicationSchema), asyncHandler(publishDraft));
+
+router.get("/my-articles", requireAuth, asyncHandler(getMyArticles));
 
 export default router;

@@ -6,6 +6,8 @@ package draft;
 
 service DraftService {
   rpc SubmitDraft (SubmitDraftRequest) returns (SubmitDraftResponse);
+  rpc UpdateDraft (UpdateDraftRequest) returns (UpdateDraftResponse);
+  rpc PublishDraft (PublishDraftRequest) returns (PublishDraftResponse);
 }
 
 message SubmitDraftRequest {
@@ -19,5 +21,35 @@ message SubmitDraftRequest {
 
 message SubmitDraftResponse {
   string article_id = 1;
+  string message = 2;
+}
+
+message UpdateDraftRequest {
+  string draft_id = 1;
+  string title = 2;
+  string cover_uri = 3;
+  string summary = 4;
+  string category_id = 5;
+  string content = 6;
+}
+
+message UpdateDraftResponse {
+  bool is_success = 1;
+  string message = 2;
+}
+
+message PublishDraftRequest {
+  string draft_id =1;
+  string title = 2;
+  string cover_uri = 3;
+  string summary = 4;
+  string category_id = 5;
+  string author_name = 6;
+  string author_pfp_uri = 7;
+  string content = 8;
+}
+
+message PublishDraftResponse {
+  string article_status =1;
   string message = 2;
 }

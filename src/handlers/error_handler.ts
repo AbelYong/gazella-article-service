@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express"
 import { ServiceDomainError } from "../errors/error.js";
-import { DB_UNAVAILABLE } from "../grpc/grpc_util.js";
 
 export const globalErrorHandler = (
     err: any,
@@ -15,15 +14,16 @@ export const globalErrorHandler = (
     if (err.name === "UnauthorizedError") {
         res.status(401).json({
             error: "Access deniend",
-            message: err.message
+            message: err.message,
+            code: "UNAUTHORIZED"
         });
         return;
     }
 
-    if (err instanceof ServiceDomainError && err.domainCode === DB_UNAVAILABLE) {
-        res.status(503).json({
-            code: "Database unavailable",
-            message: err.message,
+    if (err instanceof ServiceDomainError) {
+        res.status(err.statusCode || 500).json({
+            message: err.originalMessage,
+            code: err.code
         });
         return;
     }

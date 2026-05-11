@@ -6,6 +6,7 @@ package article;
 
 service ArticleService {
   rpc GetCategories (GetCategoriesRequest) returns (GetCategoriesResponse);
+  rpc GetMyArticles (GetMyArticlesRequest) returns (GetMyArticlesResponse);
 }
 
 message GetCategoriesRequest { }
@@ -17,4 +18,22 @@ message Category {
 
 message GetCategoriesResponse {
   repeated Category categories = 1;
+}
+
+message MyArticle {
+  string article_id = 1;
+  string title = 2;
+  string status = 3;
+  string category = 4;
+  string published_at = 5;
+  int32 likes = 6;
+  int32 comments = 7;
+}
+
+message GetMyArticlesRequest {
+  string id = 1;
+}
+
+message GetMyArticlesResponse {
+  repeated MyArticle my_articles = 1;
 }
