@@ -4,18 +4,8 @@ import { isValidGazellaJson } from "../validators/article_validator.js";
 import { PublishDraftRequest, PublishDraftResponse, SubmitDraftRequest, SubmitDraftResponse, UpdateDraftRequest, UpdateDraftResponse } from "../grpc/drafts/types.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
 import { DraftGrpcClient } from "../grpc/drafts/client.js";
-
-type DraftAuthorization = {
-    userId: string | undefined;
-    roles : string[] | undefined;
-    permissions: string[] | undefined;
-};
-
-type AuthorizationResult = {
-    statusCode: number;
-    message: string;
-    code: string;
-};
+import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
+import { Editor, Moderator, Organizer, Volunteer, WriteArticles } from "../security/authorizations.js";
 
 type DraftService = {
     client: DraftGrpcClient,
@@ -26,16 +16,19 @@ export const makeSubmitDraftController = (client: DraftGrpcClient, executeCall: 
     return async (req: Request<{}, {}, DraftSubmissionInput>, res: Response) : Promise<void> => {
         const userId = req.auth?.sub;
 
-        const auth: DraftAuthorization = {
+        const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
             roles: req.auth?.roles,
-            permissions: req.auth?.permissions
+            permissions: req.auth?.permissions,
+            allowedRoles: [Volunteer, Organizer, Editor, Moderator],
+            fineGrainedPermission: WriteArticles
         };
 
-        const authResult = processAuth(auth);
+        const authResult = processAuthorization(auth);
 
         if (authResult.statusCode !== 200) {
             res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
         }
 
         const draftData = req.body;
@@ -74,16 +67,19 @@ async function submitDraft(service: DraftService, draft: DraftSubmissionInput) :
 
 export const makeUpdateDraftController = (client: DraftGrpcClient, executeCall: ExecuteCall) => {
     return async (req: Request<DraftIdInput, {}, DraftUpdateInput, {}>, res: Response): Promise<void> => {
-        const auth: DraftAuthorization = {
+        const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
             roles: req.auth?.roles,
-            permissions: req.auth?.permissions
+            permissions: req.auth?.permissions,
+            allowedRoles: [Volunteer, Organizer, Editor, Moderator],
+            fineGrainedPermission: WriteArticles
         };
 
-        const authResult = processAuth(auth);
+        const authResult = processAuthorization(auth);
 
         if (authResult.statusCode !== 200) {
             res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
         }
 
         const draftData = req.body;
@@ -119,16 +115,19 @@ async function updateDraft(service: DraftService, draftId: string, draft: DraftU
 
 export const makePublishDraftController = (client: DraftGrpcClient, executeCall: ExecuteCall) => {
     return async (req: Request<DraftIdInput, {}, DraftPublicationInput, {}>, res: Response) : Promise<void> => {
-        const auth: DraftAuthorization = {
+        const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
             roles: req.auth?.roles,
-            permissions: req.auth?.permissions
+            permissions: req.auth?.permissions,
+            allowedRoles: [Volunteer, Organizer, Editor, Moderator],
+            fineGrainedPermission: WriteArticles
         };
 
-        const authResult = processAuth(auth);
+        const authResult = processAuthorization(auth);
 
         if (authResult.statusCode !== 200) {
             res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
         }
 
         const draftData = req.body;
@@ -162,32 +161,4 @@ async function publishDraft(service: DraftService, draftId: string, draft: Draft
     console.log(`[INFO] Draft publication request sent for draft Id: ${request.draft_id}, Updated to status: ${response.article_status}`);
         
     return response;
-}
-
-function processAuth(auth: DraftAuthorization): AuthorizationResult {
-    if (!auth.userId) {
-        return {
-            statusCode: 401,
-            message: "Invalid Token or subject is missing (sub)",
-            code: "MISSING_SUB"
-        }
-    }
-
-    const roles = auth.roles || [];
-    const permissions = auth.permissions || [];
-    const isAuthorized = roles.includes("volunteer") || permissions.includes("write:articles");
-
-    if (!isAuthorized) {
-        return {
-            statusCode: 403,
-            message: "Invalid Token or subject is missing (sub)",
-            code: "FORBIDDEN"
-        }
-    }
-
-    return {
-        statusCode: 200,
-        message: "Authorized, continue",
-        code: "OK"
-    }
 }

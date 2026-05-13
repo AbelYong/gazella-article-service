@@ -26,6 +26,6 @@ export const makeGetMyArticlesController = (grpcClient: ArticleGrpcClient, execu
 
         const response = await executeCall(grpcClient.getMyArticles(request));
 
-        res.status(200).json(response.my_articles);
+        res.status(200).json({myArticles: response.my_articles});
     }
 }
