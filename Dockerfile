@@ -21,11 +21,13 @@ EXPOSE 7000
 
 FROM runner-base AS development
 
+USER article_service
 ENV NODE_ENV=development
-COPY --from=builder --chown=article_service:article_service /app/src ./src
+COPY --from=builder --chown=root:root --chmod=755 /app/src ./src
 CMD ["node", "dist/index.js"]
 
 FROM runner-base AS production
 
+USER article_service
 ENV NODE_ENV=production
 CMD ["node", "dist/index.js"]

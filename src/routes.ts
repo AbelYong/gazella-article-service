@@ -8,6 +8,10 @@ import { executeGrpcCall } from "./grpc/grpc_util.js";
 import { ArticleGrpcClient } from "./grpc/articles/client.js";
 import { DraftGrpcClient } from "./grpc/drafts/client.js";
 import { makePublishDraftController, makeSubmitDraftController, makeUpdateDraftController } from "./controllers/draft_controller.js";
+import { makeApproveArticleController, makeGetArticlesPendingReviewController, makeRejectArticleController } from "./controllers/review_controller.js";
+import { ReviewGrpcClient } from './grpc/reviews/client.js';
+import { ArticleIdSchema } from "./schemas/article_schema.js";
+import { GetArticlesPendingReviewSchema, RejectArticleSchema } from './schemas/review_schema.js';
 
 const router = Router();
 
@@ -15,12 +19,16 @@ const dataServiceUrl = process.env["DATA_SERVICE_URL"] || "localhost:8080";
 
 const articleClient = new ArticleGrpcClient(dataServiceUrl);
 const draftClient = new DraftGrpcClient(dataServiceUrl);
+const reviewClient = new ReviewGrpcClient(dataServiceUrl);
 
 const getCategories = makeGetCategoriesController(articleClient, executeGrpcCall);
 const getMyArticles = makeGetMyArticlesController(articleClient, executeGrpcCall);
 const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
 const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
 const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
+const getArticlesPendingReview = makeGetArticlesPendingReviewController(reviewClient, executeGrpcCall);
+const approveArticle = makeApproveArticleController(reviewClient, executeGrpcCall);
+const rejectArticle = makeRejectArticleController(reviewClient, executeGrpcCall);
 
 /**
  * @openapi
@@ -226,5 +234,11 @@ router.patch("/drafts/:draftId", requireAuth, validateParams(DraftIdSchema), val
 router.post("/drafts/:draftId/publications", requireAuth, validateParams(DraftIdSchema), validateBody(DraftPublicationSchema), asyncHandler(publishDraft));
 
 router.get("/my-articles", requireAuth, asyncHandler(getMyArticles));
+
+router.get("/to-review-articles", requireAuth, validateBody(GetArticlesPendingReviewSchema), asyncHandler(getArticlesPendingReview));
+
+router.put("/reviews/:articleId/publications", requireAuth, validateParams(ArticleIdSchema), asyncHandler(approveArticle));
+
+router.put("/reviews/:articleId/rejections", requireAuth, validateParams(ArticleIdSchema), validateBody(RejectArticleSchema), asyncHandler(rejectArticle));
 
 export default router;

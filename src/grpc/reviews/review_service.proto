@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option csharp_namespace = "ArticleService.Protos";
+
+package review;
+
+service ReviewService {
+  rpc GetArticlesPendingReview (GetArticlesPendingReviewRequest) returns (GetArticlesPendingReviewResponse); 
+  rpc ApproveArticle (ApproveArticleRequest) returns (ApproveArticleResponse);
+  rpc RejectArticle (RejectArticleRequest) returns (RejectArticleResponse);
+}
+
+message GetArticlesPendingReviewRequest {
+  int32 page_index = 1;
+  int32 page_size = 2;
+}
+
+message ArticlePendingReview {
+  string article_id = 1;
+  string title = 2;
+  string author_name = 3;
+  string category = 4;
+  string submitted_at = 5;
+}
+
+message GetArticlesPendingReviewResponse {
+  repeated ArticlePendingReview articles_pending = 1;
+  int32 total_pending = 2;
+  int32 current_page = 3;
+  int32 page_count = 4;
+  int32 page_size = 5;
+}
+
+message ApproveArticleRequest {
+  string article_id = 1;
+  string reviewed_by_id = 2;
+}
+
+message ApproveArticleResponse {
+  string article_status = 1;
+  string message = 2;
+}
+
+message RejectArticleRequest {
+  string article_id = 1;
+  string reviewed_by_id = 2;
+  string rejection_reason = 3;
+}
+
+message RejectArticleResponse {
+  string article_status = 1;
+  string message = 2;
+}

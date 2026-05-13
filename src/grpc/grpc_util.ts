@@ -1,10 +1,11 @@
 import * as grpc from '@grpc/grpc-js';
 import { ServiceDomainError } from '../errors/error.js';
 
-export const INVALID_ARGUMENT = "invalid_argument";
-export const DB_UNAVAILABLE = "db_unavailable";
-export const INVALID_OPERATION = "invalid_operation";
-export const NOT_FOUND = "not_found";
+const INVALID_ARGUMENT = "invalid_argument";
+const DB_UNAVAILABLE = "db_unavailable";
+const INVALID_OPERATION = "invalid_operation";
+const NOT_FOUND = "not_found";
+const ABORTED = "aborted";
 
 export async function executeGrpcCall<T>(grpcPromise: Promise<T>): Promise<T> {
   try {
@@ -50,6 +51,9 @@ function getErrorCode(domainCode: string) : string {
     case NOT_FOUND:
       code = "NOT_FOUND";
       break;
+    case ABORTED:
+      code = "ABORTED";
+      break;
     default:
       code = domainCode;
   }
@@ -72,6 +76,9 @@ function getStatusCode(domainCode: string) : number {
       break;
     case NOT_FOUND:
       statusCode = 404;
+      break;
+    case ABORTED:
+      statusCode = 409;
       break;
     default:
       statusCode = 500;
