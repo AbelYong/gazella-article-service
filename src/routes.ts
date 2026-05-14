@@ -3,7 +3,7 @@ import { requireAuth } from "./validators/auth_validator.js";
 import { asyncHandler } from "./handlers/async_handler.js";
 import { validateBody, validateParams } from "./validators/request_validator.js";
 import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpdateSchema } from "./schemas/draft_schema.js";
-import { makeGetCategoriesController, makeGetMyArticlesController } from "./controllers/article_controller.js";
+import { makeGetArticleController, makeGetCategoriesController, makeGetMyArticlesController } from "./controllers/article_controller.js";
 import { executeGrpcCall } from "./grpc/grpc_util.js";
 import { ArticleGrpcClient } from "./grpc/articles/client.js";
 import { DraftGrpcClient } from "./grpc/drafts/client.js";
@@ -23,12 +23,15 @@ const reviewClient = new ReviewGrpcClient(dataServiceUrl);
 
 const getCategories = makeGetCategoriesController(articleClient, executeGrpcCall);
 const getMyArticles = makeGetMyArticlesController(articleClient, executeGrpcCall);
+const getArticle = makeGetArticleController(articleClient, executeGrpcCall);
 const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
 const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
 const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
 const getArticlesPendingReview = makeGetArticlesPendingReviewController(reviewClient, executeGrpcCall);
 const approveArticle = makeApproveArticleController(reviewClient, executeGrpcCall);
 const rejectArticle = makeRejectArticleController(reviewClient, executeGrpcCall);
+
+router.get("/articles/:articleId", validateParams(ArticleIdSchema), asyncHandler(getArticle));
 
 /**
  * @openapi

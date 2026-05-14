@@ -7,6 +7,7 @@ package article;
 service ArticleService {
   rpc GetCategories (GetCategoriesRequest) returns (GetCategoriesResponse);
   rpc GetMyArticles (GetMyArticlesRequest) returns (GetMyArticlesResponse);
+  rpc GetArticle (GetArticleRequest) returns (GetArticleResponse);
 }
 
 message GetCategoriesRequest { }
@@ -36,4 +37,35 @@ message GetMyArticlesRequest {
 
 message GetMyArticlesResponse {
   repeated MyArticle my_articles = 1;
+}
+
+message Comment {
+  string id = 1;
+  string author_id = 2;
+  string author_name = 3;
+  string author_pfp_uri = 4;
+  string content = 5;
+  string posted_at = 6;
+}
+
+message GetArticleRequest {
+  string id = 1;
+}
+
+message GetArticleResponse {
+  string id = 1;
+  string title = 2;
+  string cover_uri = 3;
+  string summary = 4;
+  string category = 5;
+  string published_at = 6;
+  string last_updated_at = 7;
+  string status = 8;
+  string content = 9;
+  string author_id = 10;
+  string author_name = 11;
+  string author_pfp_uri = 12;
+  int32 likes_count = 13;
+  int32 comments_count = 14;
+  repeated Comment recent_comments = 15;
 }

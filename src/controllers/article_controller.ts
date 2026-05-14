@@ -1,7 +1,8 @@
 import { Request, Response } from "express"
-import { GetCategoriesRequest, GetMyArticlesRequest } from '../grpc/articles/types.js';
+import { GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
+import { ArticleIdInput } from "../schemas/article_schema.js";
 
 export const makeGetCategoriesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
     return async (_req: Request, res: Response) : Promise<void> => {
@@ -27,5 +28,17 @@ export const makeGetMyArticlesController = (grpcClient: ArticleGrpcClient, execu
         const response = await executeCall(grpcClient.getMyArticles(request));
 
         res.status(200).json({myArticles: response.my_articles});
+    }
+}
+
+export const makeGetArticleController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<ArticleIdInput>, res: Response) : Promise<void> => {
+        const request:GetArticleRequest = {
+            id: req.params.articleId 
+        };
+
+        const response = await executeCall(client.getArticle(request));
+
+        res.status(200).json(response);
     }
 }
