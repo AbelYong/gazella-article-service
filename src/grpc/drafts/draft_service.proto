@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "ArticleService.Protos";
+option csharp_namespace = "ArticleService.Protos.Draft";
 
 package draft;
 
