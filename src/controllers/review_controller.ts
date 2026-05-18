@@ -8,7 +8,7 @@ import { GetArticlesPendingReviewInput, RejectArticleInput } from '../schemas/re
 import { ReviewGrpcClient } from "../grpc/reviews/client.js";
 
 export const makeGetArticlesPendingReviewController = (client: ReviewGrpcClient, executeCall: ExecuteCall) => {
-    return async (req: Request<{}, {}, GetArticlesPendingReviewInput>, res: Response) : Promise<void> => {
+    return async (req: Request<{}, {}, {}, GetArticlesPendingReviewInput>, res: Response) : Promise<void> => {
         const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
             roles: req.auth?.roles,
@@ -25,8 +25,8 @@ export const makeGetArticlesPendingReviewController = (client: ReviewGrpcClient,
         }
 
         const request: GetArticlesPendingReviewRequest = {
-            page_index: req.body.pageIndex,
-            page_size: req.body.pageSize
+            page_index: req.query.pageIndex,
+            page_size: req.query.pageSize
         };
 
         const response = await executeCall(client.getArticlesPendingReview(request));

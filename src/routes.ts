@@ -1,7 +1,7 @@
-import { Router } from "express"
+import { RequestHandler, Router } from "express"
 import { requireAuth } from "./validators/auth_validator.js";
 import { asyncHandler } from "./handlers/async_handler.js";
-import { validateBody, validateParams } from "./validators/request_validator.js";
+import { validateBody, validateParams, validateQuery } from "./validators/request_validator.js";
 import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpdateSchema } from "./schemas/draft_schema.js";
 import { makeGetArticleController, makeGetCategoriesController, makeGetMyArticlesController } from "./controllers/article_controller.js";
 import { executeGrpcCall } from "./grpc/grpc_util.js";
@@ -12,6 +12,9 @@ import { makeApproveArticleController, makeGetArticlesPendingReviewController, m
 import { ReviewGrpcClient } from './grpc/reviews/client.js';
 import { ArticleIdSchema } from "./schemas/article_schema.js";
 import { GetArticlesPendingReviewSchema, RejectArticleSchema } from './schemas/review_schema.js';
+import { makeCommentArticleController, makeDeleteCommentController, makeGetCommentsController, makeLikeArticleController, makeRevokeLikeController } from "./controllers/interaction_controller.js";
+import { InteractionGrpcClient } from "./grpc/interactions/client.js";
+import { CommentArticleSchema, DeleteCommentSchema, GetCommentsSchema } from "./schemas/interaction_schema.js";
 
 const router = Router();
 
@@ -20,6 +23,7 @@ const dataServiceUrl = process.env["DATA_SERVICE_URL"] || "localhost:8080";
 const articleClient = new ArticleGrpcClient(dataServiceUrl);
 const draftClient = new DraftGrpcClient(dataServiceUrl);
 const reviewClient = new ReviewGrpcClient(dataServiceUrl);
+const interactionClient = new InteractionGrpcClient(dataServiceUrl);
 
 const getCategories = makeGetCategoriesController(articleClient, executeGrpcCall);
 const getMyArticles = makeGetMyArticlesController(articleClient, executeGrpcCall);
@@ -30,6 +34,11 @@ const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
 const getArticlesPendingReview = makeGetArticlesPendingReviewController(reviewClient, executeGrpcCall);
 const approveArticle = makeApproveArticleController(reviewClient, executeGrpcCall);
 const rejectArticle = makeRejectArticleController(reviewClient, executeGrpcCall);
+const commentArticle = makeCommentArticleController(interactionClient, executeGrpcCall);
+const deleteComment = makeDeleteCommentController(interactionClient, executeGrpcCall);
+const getComments = makeGetCommentsController(interactionClient, executeGrpcCall);
+const likeArticle = makeLikeArticleController(interactionClient, executeGrpcCall);
+const revokeLike = makeRevokeLikeController(interactionClient, executeGrpcCall);
 
 router.get("/articles/:articleId", validateParams(ArticleIdSchema), asyncHandler(getArticle));
 
@@ -238,10 +247,20 @@ router.post("/drafts/:draftId/publications", requireAuth, validateParams(DraftId
 
 router.get("/my-articles", requireAuth, asyncHandler(getMyArticles));
 
-router.get("/to-review-articles", requireAuth, validateBody(GetArticlesPendingReviewSchema), asyncHandler(getArticlesPendingReview));
+router.get("/to-review-articles", requireAuth, validateQuery(GetArticlesPendingReviewSchema), asyncHandler(getArticlesPendingReview) as unknown as RequestHandler);
 
 router.put("/reviews/:articleId/publications", requireAuth, validateParams(ArticleIdSchema), asyncHandler(approveArticle));
 
 router.put("/reviews/:articleId/rejections", requireAuth, validateParams(ArticleIdSchema), validateBody(RejectArticleSchema), asyncHandler(rejectArticle));
+
+router.post("/:articleId/comments", requireAuth, validateParams(ArticleIdSchema), validateBody(CommentArticleSchema), asyncHandler(commentArticle));
+
+router.delete("/:articleId/comments/:commentId", requireAuth, validateParams(DeleteCommentSchema), asyncHandler(deleteComment));
+
+router.get("/:articleId/comments", validateParams(ArticleIdSchema), validateQuery(GetCommentsSchema), asyncHandler(getComments) as unknown as RequestHandler);
+
+router.post("/:articleId/likes", requireAuth, validateParams(ArticleIdSchema), asyncHandler(likeArticle));
+
+router.delete("/:articleId/likes", requireAuth, validateParams(ArticleIdSchema), asyncHandler(revokeLike));
 
 export default router;
