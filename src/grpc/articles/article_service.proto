@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "ArticleService.Protos";
+option csharp_namespace = "ArticleService.Protos.Article";
 
 package article;
 
@@ -39,7 +39,7 @@ message GetMyArticlesResponse {
   repeated MyArticle my_articles = 1;
 }
 
-message Comment {
+message RecentComment {
   string id = 1;
   string author_id = 2;
   string author_name = 3;
@@ -67,5 +67,5 @@ message GetArticleResponse {
   string author_pfp_uri = 12;
   int32 likes_count = 13;
   int32 comments_count = 14;
-  repeated Comment recent_comments = 15;
+  repeated RecentComment recent_comments = 15;
 }

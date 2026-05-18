@@ -33,7 +33,7 @@ export interface GetArticleRequest {
   id: string;
 }
 
-export interface Comment {
+export interface RecentComment {
   id: string;
   author_id: string;
   author_name: string;
@@ -57,7 +57,7 @@ export interface GetArticleResponse {
   author_pfp_uri: string;
   likes_count: number;
   comments_count: number;
-  recent_comments: Comment[];
+  recent_comments: RecentComment[];
 }
 
 export interface ArticleServiceClient extends grpc.Client {

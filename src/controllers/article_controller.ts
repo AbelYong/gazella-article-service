@@ -39,6 +39,22 @@ export const makeGetArticleController = (client: ArticleGrpcClient, executeCall:
 
         const response = await executeCall(client.getArticle(request));
 
-        res.status(200).json(response);
+        res.status(200).json({
+            id: response.id,
+            title: response.title,
+            coverUri: response.cover_uri,
+            summary: response.summary,
+            category: response.category,
+            publishedAt: response.published_at,
+            lastUpdatedAt: response.last_updated_at,
+            status: response.status,
+            content: response.content,
+            authorId: response.author_id,
+            authorName: response.author_name,
+            authorPfpUri: response.author_pfp_uri,
+            likesCount: response.likes_count,
+            commentsCount: response.comments_count,
+            recentComments: response.recent_comments
+        });
     }
 }
