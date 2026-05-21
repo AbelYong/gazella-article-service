@@ -93,6 +93,38 @@ export interface SearchArticlesResponse {
   page_size: number;
 }
 
+export interface PublishedArticle {
+  id: string;
+  title: string;
+  author_name: string;
+  published_at: string;
+  likes_count: number;
+  comments_count: number;
+  status: string;
+}
+
+export interface GetPublishedArticlesRequest {
+  page_index: number;
+  page_size: number;
+}
+
+export interface GetPublishedArticlesResponse {
+  published_articles: PublishedArticle[];
+  total_entries: number;
+  current_page: number;
+  page_count: number;
+  page_size: number;
+}
+
+export interface DeleteArticleRequest {
+  article_id: string;
+}
+
+export interface DeleteArticleResponse {
+  status: string;
+  message: string;
+}
+
 export interface ArticleServiceClient extends grpc.Client {
   GetCategories(
     request: GetCategoriesRequest,
@@ -109,5 +141,13 @@ export interface ArticleServiceClient extends grpc.Client {
   SearchArticles(
     request: SearchArticlesRequest,
     callback: (error: grpc.ServiceError | null, response: SearchArticlesResponse) => void
+  ): grpc.ClientUnaryCall;
+  GetPublishedArticles(
+    request: GetPublishedArticlesRequest,
+    callback: (error: grpc.ServiceError | null, response: GetPublishedArticlesResponse) => void
+  ): grpc.ClientUnaryCall;
+  DeleteArticle(
+    request: DeleteArticleRequest,
+    callback: (error: grpc.ServiceError | null, response: DeleteArticleResponse) => void
   ): grpc.ClientUnaryCall;
 }

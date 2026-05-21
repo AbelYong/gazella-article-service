@@ -32,3 +32,21 @@ export const SearchArticlesSchema = z.object({
 });
 
 export type SearchArticlesInput = z.infer<typeof SearchArticlesSchema>;
+
+export const GetPublishedArticlesSchema = z.object({
+    pageIndex: z.number().int().min(0).default(1),
+    pageSize: z.number().int().min(10).default(10)
+}).superRefine((data, ctx) => {
+    const offset = data.pageIndex * data.pageSize;
+    if (offset > MaxOffset) {
+        ctx.addIssue({
+            code: "too_big",
+            maximum: MaxOffset,
+            origin: "int",
+            message: "The calculaded page offset is too high",
+            path: ["pageSize", "pageIndex"]
+        });
+    } 
+});
+
+export type GetPublishedArticlesInput = z.infer<typeof GetPublishedArticlesSchema>;

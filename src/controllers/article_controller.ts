@@ -1,8 +1,10 @@
 import { Request, Response } from "express"
-import { GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
+import { DeleteArticleRequest, GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
-import { ArticleIdInput, SearchArticlesInput } from "../schemas/article_schema.js";
+import { ArticleIdInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
+import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
+import { Editor, ManageArticles, Moderator } from "../security/authorizations.js";
 
 export const makeGetCategoriesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
     return async (_req: Request, res: Response) : Promise<void> => {
@@ -93,5 +95,76 @@ export const makeSearchArticlesController = (client: ArticleGrpcClient, executeC
             pageCount: response.page_count,
             pageSize: response.page_size
         });
+    }
+}
+
+export const makeGetPublishedArticlesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<{}, {}, {}, GetPublishedArticlesInput>, res: Response) : Promise<void> => {
+        const auth: ControllerAuthorization = {
+            userId: req.auth?.sub,
+            roles: req.auth?.roles,
+            permissions: req.auth?.permissions,
+            allowedRoles: [Editor, Moderator],
+            fineGrainedPermission: ManageArticles
+        };
+                
+        const authResult = processAuthorization(auth);
+        
+        if (authResult.statusCode !== 200) {
+            res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
+        }
+
+        const request: GetPublishedArticlesRequest = {
+            page_index: req.query.pageIndex,
+            page_size: req.query.pageSize
+        };
+
+        const response = await executeCall(client.getPublishedArticles(request));
+
+        res.status(200).json({
+            publishedArticles: [
+                ...response.published_articles.map(article => ({
+                    id: article.id,
+                    title: article.title,
+                    authorName: article.author_name,
+                    publishedAt: article.published_at,
+                    likesCount: article.likes_count,
+                    commentsCount: article.comments_count,
+                    status: article.status
+                }))
+            ],
+            totalEntries: response.total_entries,
+            currentPage: response.current_page,
+            pageCount: response.page_count,
+            pageSize: response.page_size
+        });
+    }
+}
+
+export const makeDeleteArticleController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<ArticleIdInput>, res: Response) : Promise<void> => {
+        const auth: ControllerAuthorization = {
+            userId: req.auth?.sub,
+            roles: req.auth?.roles,
+            permissions: req.auth?.permissions,
+            allowedRoles: [Editor, Moderator],
+            fineGrainedPermission: ManageArticles
+        };
+                
+        const authResult = processAuthorization(auth);
+        
+        if (authResult.statusCode !== 200) {
+            res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
+        }
+
+        const request: DeleteArticleRequest = {
+            article_id: req.params.articleId,
+        }
+
+        const response = await executeCall(client.deleteArticle(request));
+
+        res.status(200).json(response);
     }
 }

@@ -1,7 +1,7 @@
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
 import path from "node:path";
-import { GetCategoriesRequest, GetCategoriesResponse, ArticleServiceClient, GetMyArticlesResponse, GetMyArticlesRequest, GetArticleRequest, GetArticleResponse, SearchArticlesRequest, SearchArticlesResponse } from "./types.js";
+import { GetCategoriesRequest, GetCategoriesResponse, ArticleServiceClient, GetMyArticlesResponse, GetMyArticlesRequest, GetArticleRequest, GetArticleResponse, SearchArticlesRequest, SearchArticlesResponse, GetPublishedArticlesRequest, DeleteArticleRequest, DeleteArticleResponse, GetPublishedArticlesResponse } from "./types.js";
 
 const PROTO_PATH = path.resolve(import.meta.dirname, "./article_service.proto");
 
@@ -53,6 +53,22 @@ export class ArticleGrpcClient {
   public searchArticles(request: SearchArticlesRequest): Promise<SearchArticlesResponse> {
     return new Promise((resolve, reject) => {
       this.client.SearchArticles(request, (error, response) => {
+        error ? reject(error) : resolve(response);
+      });
+    });
+  }
+
+  public getPublishedArticles(request: GetPublishedArticlesRequest): Promise<GetPublishedArticlesResponse> {
+    return new Promise((resolve, reject) => {
+      this.client.GetPublishedArticles(request, (error, response) => {
+        error ? reject(error) : resolve(response);
+      });
+    });
+  }
+
+  public deleteArticle(request: DeleteArticleRequest): Promise<DeleteArticleResponse> {
+    return new Promise((resolve, reject) => {
+      this.client.DeleteArticle(request, (error, response) => {
         error ? reject(error) : resolve(response);
       });
     });
