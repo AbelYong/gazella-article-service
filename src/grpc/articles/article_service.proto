@@ -8,6 +8,7 @@ service ArticleService {
   rpc GetCategories (GetCategoriesRequest) returns (GetCategoriesResponse);
   rpc GetMyArticles (GetMyArticlesRequest) returns (GetMyArticlesResponse);
   rpc GetArticle (GetArticleRequest) returns (GetArticleResponse);
+  rpc SearchArticles (SearchArticlesRequest) returns (SearchArticlesResponse);
 }
 
 message GetCategoriesRequest { }
@@ -68,4 +69,37 @@ message GetArticleResponse {
   int32 likes_count = 13;
   int32 comments_count = 14;
   repeated RecentComment recent_comments = 15;
+}
+
+message SearchFilter {
+  string title = 1;
+  string category = 2;
+  string author_name = 3;
+  string published_after = 4;
+  string sort_by = 5;
+}
+
+message SearchArticlesRequest {
+  SearchFilter filter = 1;
+  int32 page_index = 2;
+  int32 page_size = 3;
+}
+
+message ArticleEntry {
+  string id = 1;
+  string title = 2;
+  string author_id = 3;
+  string author_name = 4;
+  string category_name = 5;
+  string summary = 6;
+  string published_at = 7;
+  string last_updated_at = 8;
+}
+
+message SearchArticlesResponse {
+  repeated ArticleEntry entries = 1;
+  int32 total_entries = 2;
+  int32 current_page = 3;
+  int32 page_count = 4;
+  int32 page_size = 5;
 }

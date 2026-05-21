@@ -60,6 +60,39 @@ export interface GetArticleResponse {
   recent_comments: RecentComment[];
 }
 
+export interface SearchFilter {
+  title: string;
+  category: string;
+  author_name: string;
+  published_after: string;
+  sort_by: string;
+}
+
+export interface SearchArticlesRequest {
+  filter: SearchFilter;
+  page_index: number;
+  page_size: number;
+}
+
+export interface ArticleEntry {
+  id: string;
+  title: string;
+  author_id: string;
+  author_name: string;
+  category_name: string;
+  summary: string;
+  published_at: string;
+  last_updated_at: string;
+}
+
+export interface SearchArticlesResponse {
+  entries: ArticleEntry[];
+  total_entries: number;
+  current_page: number;
+  page_count: number;
+  page_size: number;
+}
+
 export interface ArticleServiceClient extends grpc.Client {
   GetCategories(
     request: GetCategoriesRequest,
@@ -72,5 +105,9 @@ export interface ArticleServiceClient extends grpc.Client {
   GetArticle(
     request: GetArticleRequest,
     callback: (error: grpc.ServiceError | null, response: GetArticleResponse) => void
+  ): grpc.ClientUnaryCall;
+  SearchArticles(
+    request: SearchArticlesRequest,
+    callback: (error: grpc.ServiceError | null, response: SearchArticlesResponse) => void
   ): grpc.ClientUnaryCall;
 }

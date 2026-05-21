@@ -1,8 +1,8 @@
 import { Request, Response } from "express"
-import { GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest } from '../grpc/articles/types.js';
+import { GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
-import { ArticleIdInput } from "../schemas/article_schema.js";
+import { ArticleIdInput, SearchArticlesInput } from "../schemas/article_schema.js";
 
 export const makeGetCategoriesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
     return async (_req: Request, res: Response) : Promise<void> => {
@@ -55,6 +55,43 @@ export const makeGetArticleController = (client: ArticleGrpcClient, executeCall:
             likesCount: response.likes_count,
             commentsCount: response.comments_count,
             recentComments: response.recent_comments
+        });
+    }
+}
+
+export const makeSearchArticlesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<{}, {}, {}, SearchArticlesInput>, res: Response) : Promise<void> => {
+        const request: SearchArticlesRequest = {
+            filter: {
+                title: req.query.title || "",
+                category: req.query.category || "",
+                author_name: req.query.authorName || "",
+                published_after: req.query.publishedAfter || "",
+                sort_by: req.query.sortBy || ""
+            },
+            page_index: req.query.pageIndex,
+            page_size: req.query.pageSize
+        }
+
+        const response = await executeCall(client.searchArticles(request));
+
+        res.status(200).json({
+            entries: [
+                ...response.entries.map(entry => ({
+                    id: entry.id,
+                    title: entry.title,
+                    authorId: entry.author_id,
+                    authorName: entry.author_name,
+                    categoryName: entry.category_name,
+                    summary: entry.summary,
+                    publishedAt: entry.published_at,
+                    lastUpdatedAt: entry.last_updated_at
+                }))
+            ],
+            totalEntries: response.total_entries,
+            currentPage: response.current_page,
+            pageCount: response.page_count,
+            pageSize: response.page_size
         });
     }
 }

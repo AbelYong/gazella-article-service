@@ -3,14 +3,14 @@ import { requireAuth } from "./validators/auth_validator.js";
 import { asyncHandler } from "./handlers/async_handler.js";
 import { validateBody, validateParams, validateQuery } from "./validators/request_validator.js";
 import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpdateSchema } from "./schemas/draft_schema.js";
-import { makeGetArticleController, makeGetCategoriesController, makeGetMyArticlesController } from "./controllers/article_controller.js";
+import { makeGetArticleController, makeGetCategoriesController, makeGetMyArticlesController, makeSearchArticlesController } from "./controllers/article_controller.js";
 import { executeGrpcCall } from "./grpc/grpc_util.js";
 import { ArticleGrpcClient } from "./grpc/articles/client.js";
 import { DraftGrpcClient } from "./grpc/drafts/client.js";
 import { makePublishDraftController, makeSubmitDraftController, makeUpdateDraftController } from "./controllers/draft_controller.js";
 import { makeApproveArticleController, makeGetArticlesPendingReviewController, makeRejectArticleController } from "./controllers/review_controller.js";
 import { ReviewGrpcClient } from './grpc/reviews/client.js';
-import { ArticleIdSchema } from "./schemas/article_schema.js";
+import { ArticleIdSchema, SearchArticlesSchema } from "./schemas/article_schema.js";
 import { GetArticlesPendingReviewSchema, RejectArticleSchema } from './schemas/review_schema.js';
 import { makeCommentArticleController, makeDeleteCommentController, makeGetCommentsController, makeLikeArticleController, makeRevokeLikeController } from "./controllers/interaction_controller.js";
 import { InteractionGrpcClient } from "./grpc/interactions/client.js";
@@ -27,6 +27,7 @@ const interactionClient = new InteractionGrpcClient(dataServiceUrl);
 
 const getCategories = makeGetCategoriesController(articleClient, executeGrpcCall);
 const getMyArticles = makeGetMyArticlesController(articleClient, executeGrpcCall);
+const searchArticles = makeSearchArticlesController(articleClient, executeGrpcCall);
 const getArticle = makeGetArticleController(articleClient, executeGrpcCall);
 const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
 const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
@@ -262,5 +263,7 @@ router.get("/:articleId/comments", validateParams(ArticleIdSchema), validateQuer
 router.post("/:articleId/likes", requireAuth, validateParams(ArticleIdSchema), asyncHandler(likeArticle));
 
 router.delete("/:articleId/likes", requireAuth, validateParams(ArticleIdSchema), asyncHandler(revokeLike));
+
+router.get("/search", validateQuery(SearchArticlesSchema), asyncHandler(searchArticles) as unknown as RequestHandler);
 
 export default router;
