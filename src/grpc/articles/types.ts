@@ -152,6 +152,24 @@ export interface GetAuthorStatsResponse {
   engagement_rate: number;
 }
 
+export interface GetFeaturedArticlesRequest {
+  requested_amount: number;
+}
+
+export interface FeaturedArticle {
+  id: string;
+  title: string;
+  cover_uri: string;
+  author_id: string;
+  author_name: string;
+  author_pfp_uri: string;
+  summary: string;
+}
+
+export interface GetFeaturedArticlesResponse {
+  featured_articles: FeaturedArticle[];
+}
+
 export interface ArticleServiceClient extends grpc.Client {
   GetCategories(
     request: GetCategoriesRequest,
@@ -180,5 +198,9 @@ export interface ArticleServiceClient extends grpc.Client {
   GetAuthorStats(
     request: GetAuthorStatsRequest,
     callback: (error: grpc.ServiceError | null, response: GetAuthorStatsResponse) => void
+  ): grpc.ClientUnaryCall;
+  GetFeaturedArticles(
+    request: GetFeaturedArticlesRequest,
+    callback: (error: grpc.ServiceError | null, response: GetFeaturedArticlesResponse) => void
   ): grpc.ClientUnaryCall;
 }

@@ -3,14 +3,14 @@ import { requireAuth } from "./validators/auth_validator.js";
 import { asyncHandler } from "./handlers/async_handler.js";
 import { validateBody, validateParams, validateQuery } from "./validators/request_validator.js";
 import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpdateSchema } from "./schemas/draft_schema.js";
-import { makeDeleteArticleController, makeGetArticleController, makeGetAuthorStatsController, makeGetCategoriesController, makeGetMyArticlesController, makeGetPublishedArticlesController, makeSearchArticlesController } from "./controllers/article_controller.js";
+import { makeDeleteArticleController, makeGetArticleController, makeGetAuthorStatsController, makeGetCategoriesController, makeGetFeaturedArticlesController, makeGetMyArticlesController, makeGetPublishedArticlesController, makeSearchArticlesController } from "./controllers/article_controller.js";
 import { executeGrpcCall } from "./grpc/grpc_util.js";
 import { ArticleGrpcClient } from "./grpc/articles/client.js";
 import { DraftGrpcClient } from "./grpc/drafts/client.js";
 import { makePublishDraftController, makeSubmitDraftController, makeUpdateDraftController } from "./controllers/draft_controller.js";
 import { makeApproveArticleController, makeGetArticlesPendingReviewController, makeRejectArticleController } from "./controllers/review_controller.js";
 import { ReviewGrpcClient } from './grpc/reviews/client.js';
-import { ArticleIdSchema, GetPublishedArticlesSchema, SearchArticlesSchema } from "./schemas/article_schema.js";
+import { ArticleIdSchema, GetFeaturedArticlesSchema, GetPublishedArticlesSchema, SearchArticlesSchema } from "./schemas/article_schema.js";
 import { GetArticlesPendingReviewSchema, RejectArticleSchema } from './schemas/review_schema.js';
 import { makeCommentArticleController, makeDeleteCommentController, makeGetCommentsController, makeLikeArticleController, makeRevokeLikeController } from "./controllers/interaction_controller.js";
 import { InteractionGrpcClient } from "./grpc/interactions/client.js";
@@ -32,6 +32,7 @@ const getPublishedArticles = makeGetPublishedArticlesController(articleClient, e
 const deleteArticle = makeDeleteArticleController(articleClient, executeGrpcCall);
 const getArticle = makeGetArticleController(articleClient, executeGrpcCall);
 const getAuthorStats = makeGetAuthorStatsController(articleClient, executeGrpcCall);
+const getFeaturedArticles = makeGetFeaturedArticlesController(articleClient, executeGrpcCall);
 const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
 const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
 const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
@@ -274,5 +275,7 @@ router.get("/publications", requireAuth, validateQuery(GetPublishedArticlesSchem
 router.delete("/publications/:articleId", requireAuth, validateParams(ArticleIdSchema), asyncHandler(deleteArticle));
 
 router.get("/my-stats", requireAuth, asyncHandler(getAuthorStats));
+
+router.get("/featured", validateQuery(GetFeaturedArticlesSchema), asyncHandler(getFeaturedArticles) as unknown as RequestHandler);
 
 export default router;

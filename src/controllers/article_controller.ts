@@ -1,8 +1,8 @@
 import { Request, Response } from "express"
-import { DeleteArticleRequest, GetArticleRequest, GetAuthorStatsRequest, GetCategoriesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
+import { DeleteArticleRequest, GetArticleRequest, GetAuthorStatsRequest, GetCategoriesRequest, GetFeaturedArticlesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
-import { ArticleIdInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
+import { ArticleIdInput, GetFeaturedArticlesInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
 import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
 import { Editor, ManageArticles, Moderator } from "../security/authorizations.js";
 
@@ -203,6 +203,30 @@ export const makeGetAuthorStatsController = (client: ArticleGrpcClient, executeC
             totalComments: response.total_comments,
             publishedArticlesCount: response.published_articles_count,
             engagementRate: response.engagement_rate
+        });
+    }
+}
+
+export const makeGetFeaturedArticlesController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<{}, {}, {}, GetFeaturedArticlesInput>, res: Response) : Promise<void> => {
+        const request: GetFeaturedArticlesRequest = {
+            requested_amount: req.query.amount
+        }
+
+        const response = await executeCall(client.getFeaturedArticles(request));
+
+        res.status(200).json({
+            featuredArticles: [
+                ...response.featured_articles.map(featured => ({
+                    id: featured.id,
+                    title: featured.title,
+                    coverUri: featured.cover_uri,
+                    authorId: featured.author_id,
+                    authorName: featured.author_name,
+                    authorPfpUri: featured.author_pfp_uri,
+                    summary: featured.summary 
+                }))
+            ]
         });
     }
 }

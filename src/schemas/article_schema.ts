@@ -1,5 +1,5 @@
 import z from "zod";
-import { MaxOffset } from "../validators/pagination_util.js";
+import { MaxOffset, MaxPageIndex } from "../validators/pagination_util.js";
 
 export const ArticleIdSchema = z.object({
     articleId: z.uuidv4()
@@ -10,8 +10,14 @@ export type ArticleIdInput = z.infer<typeof ArticleIdSchema>
 const iso8601ZRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
 export const SearchArticlesSchema = z.object({
-    pageIndex: z.number().int().min(0).default(1),
-    pageSize: z.number().int().min(10).default(10),
+    pageIndex: z.coerce.number().int()
+        .min(1, { error: "Page index cannot be lower than 1"} )
+        .max(MaxPageIndex, { error: `Page index cannot be higher than ${MaxPageIndex}`} )
+        .default(1),
+    pageSize: z.coerce.number().int()
+        .min(10, { error: "Page size cannot be lower than 10" })
+        .max(50, { error: "Page size cannot be higher than 50" })
+        .default(10),
     title: z.string().optional(),
     category: z.string().optional(),
     authorName: z.string().optional(),
@@ -31,11 +37,17 @@ export const SearchArticlesSchema = z.object({
     } 
 });
 
-export type SearchArticlesInput = z.infer<typeof SearchArticlesSchema>;
+export type SearchArticlesInput = z.infer<typeof SearchArticlesSchema>
 
 export const GetPublishedArticlesSchema = z.object({
-    pageIndex: z.number().int().min(0).default(1),
-    pageSize: z.number().int().min(10).default(10)
+    pageIndex: z.coerce.number().int()
+        .min(1, { error: "Page index cannot be lower than 1"} )
+        .max(MaxPageIndex, { error: `Page index cannot be higher than ${MaxPageIndex}`} )
+        .default(1),
+    pageSize: z.coerce.number().int()
+        .min(10, { error: "Page size cannot be lower than 10" })
+        .max(50, { error: "Page size cannot be higher than 50" })
+        .default(10),
 }).superRefine((data, ctx) => {
     const offset = data.pageIndex * data.pageSize;
     if (offset > MaxOffset) {
@@ -49,4 +61,10 @@ export const GetPublishedArticlesSchema = z.object({
     } 
 });
 
-export type GetPublishedArticlesInput = z.infer<typeof GetPublishedArticlesSchema>;
+export type GetPublishedArticlesInput = z.infer<typeof GetPublishedArticlesSchema>
+
+export const GetFeaturedArticlesSchema = z.object({
+    amount: z.coerce.number().int().min(3).max(10)
+});
+
+export type GetFeaturedArticlesInput = z.infer<typeof GetFeaturedArticlesSchema>

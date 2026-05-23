@@ -12,6 +12,7 @@ service ArticleService {
   rpc GetPublishedArticles (GetPublishedArticlesRequest) returns (GetPublishedArticlesResponse);
   rpc DeleteArticle (DeleteArticleRequest) returns (DeleteArticleResponse);
   rpc GetAuthorStats (GetAuthorStatsRequest) returns (GetAuthorStatsResponse);
+  rpc GetFeaturedArticles (GetFeaturedArticlesRequest) returns (GetFeaturedArticlesResponse);
 }
 
 message GetCategoriesRequest { }
@@ -164,4 +165,22 @@ message GetAuthorStatsResponse {
   int32 total_comments = 4;
   int32 published_articles_count = 5;
   float engagement_rate = 6;
+}
+
+message GetFeaturedArticlesRequest {
+  int32 requested_amount = 1;
+}
+
+message FeaturedArticle {
+  string id = 1;
+  string title = 2;
+  string cover_uri = 3;
+  string author_id = 4;
+  string author_name = 6;
+  string author_pfp_uri = 7;
+  string summary = 8;
+}
+
+message GetFeaturedArticlesResponse {
+  repeated FeaturedArticle featured_articles = 1;
 }
