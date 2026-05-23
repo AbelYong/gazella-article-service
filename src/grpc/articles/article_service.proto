@@ -11,6 +11,7 @@ service ArticleService {
   rpc SearchArticles (SearchArticlesRequest) returns (SearchArticlesResponse);
   rpc GetPublishedArticles (GetPublishedArticlesRequest) returns (GetPublishedArticlesResponse);
   rpc DeleteArticle (DeleteArticleRequest) returns (DeleteArticleResponse);
+  rpc GetAuthorStats (GetAuthorStatsRequest) returns (GetAuthorStatsResponse);
 }
 
 message GetCategoriesRequest { }
@@ -136,4 +137,31 @@ message DeleteArticleRequest {
 message DeleteArticleResponse {
   string status = 1;
   string message = 2;
+}
+
+message GetAuthorStatsRequest {
+  string author_id = 1;
+}
+
+message TopAuthorArticle {
+  string id = 1;
+  string title = 2;
+  int32 likes_count = 3;
+  int32 comments_count = 4;
+}
+
+message RecentActivity {
+  string latest_comment_id = 1;
+  string latest_comment_article_id = 2;
+  string latest_comment_posted_at = 3;
+  int32 likes_today = 4;
+}
+
+message GetAuthorStatsResponse {
+  repeated TopAuthorArticle top_articles = 1;
+  RecentActivity recent_activity = 2;
+  int32 total_likes = 3;
+  int32 total_comments = 4;
+  int32 published_articles_count = 5;
+  float engagement_rate = 6;
 }

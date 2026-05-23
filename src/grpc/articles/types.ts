@@ -125,6 +125,33 @@ export interface DeleteArticleResponse {
   message: string;
 }
 
+export interface GetAuthorStatsRequest {
+  author_id: string;
+}
+
+export interface TopAuthorArticle {
+  id: string;
+  title: string;
+  likes_count: number;
+  comments_count: number;
+}
+
+export interface RecentActivity {
+  latest_comment_id: string;
+  latest_comment_article_id: string;
+  latest_comment_posted_at: string;
+  likes_today: string;
+}
+
+export interface GetAuthorStatsResponse {
+  top_articles: TopAuthorArticle[];
+  recent_activity: RecentActivity;
+  total_likes: number;
+  total_comments: number;
+  published_articles_count: number;
+  engagement_rate: number;
+}
+
 export interface ArticleServiceClient extends grpc.Client {
   GetCategories(
     request: GetCategoriesRequest,
@@ -149,5 +176,9 @@ export interface ArticleServiceClient extends grpc.Client {
   DeleteArticle(
     request: DeleteArticleRequest,
     callback: (error: grpc.ServiceError | null, response: DeleteArticleResponse) => void
+  ): grpc.ClientUnaryCall;
+  GetAuthorStats(
+    request: GetAuthorStatsRequest,
+    callback: (error: grpc.ServiceError | null, response: GetAuthorStatsResponse) => void
   ): grpc.ClientUnaryCall;
 }

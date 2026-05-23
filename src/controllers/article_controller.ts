@@ -1,5 +1,5 @@
 import { Request, Response } from "express"
-import { DeleteArticleRequest, GetArticleRequest, GetCategoriesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
+import { DeleteArticleRequest, GetArticleRequest, GetAuthorStatsRequest, GetCategoriesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
 import { ArticleIdInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
@@ -166,5 +166,43 @@ export const makeDeleteArticleController = (client: ArticleGrpcClient, executeCa
         const response = await executeCall(client.deleteArticle(request));
 
         res.status(200).json(response);
+    }
+}
+
+export const makeGetAuthorStatsController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request, res: Response) : Promise<void> => {
+        const userId = req.auth?.sub;
+
+        if (!userId) {
+            res.status(401).json({ message: "Invalid Token or subject is missing (sub)", code: "MISSING_SUB" });
+            return;
+        }
+
+        const request: GetAuthorStatsRequest = {
+            author_id: userId
+        }
+
+        const response = await executeCall(client.getAuthorStats(request));
+
+        res.status(200).json({
+            topArticles: [
+                ...response.top_articles.map(article => ({
+                    id: article.id,
+                    title: article.title,
+                    likesCount: article.likes_count,
+                    commentsCount: article.comments_count
+                })),
+            ],
+            recentActivity: {
+                latestCommentId: response.recent_activity.latest_comment_id,
+                latestCommentArticleId: response.recent_activity.latest_comment_article_id,
+                latestCommentPostedAt: response.recent_activity.latest_comment_posted_at,
+                likesToday: response.recent_activity.likes_today
+            },
+            totalLikes: response.total_likes,
+            totalComments: response.total_comments,
+            publishedArticlesCount: response.published_articles_count,
+            engagementRate: response.engagement_rate
+        });
     }
 }
