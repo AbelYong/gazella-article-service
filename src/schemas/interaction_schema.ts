@@ -19,12 +19,14 @@ export const DeleteCommentSchema = z.object({
 export type DeleteCommentInput = z.infer<typeof DeleteCommentSchema>
 
 export const GetCommentsSchema = z.object({
-    pageIndex: z.coerce.number()
+    pageIndex: z.coerce.number().int()
         .min(1, { error: "Page index cannot be lower than 1"} )
-        .max(MaxPageIndex, { error: `Page index cannot be higher than ${MaxPageIndex}`} ),
-    pageSize: z.coerce.number()
+        .max(MaxPageIndex, { error: `Page index cannot be higher than ${MaxPageIndex}`} )
+        .default(1),
+    pageSize: z.coerce.number().int()
         .min(10, { error: "Page size cannot be lower than 10" })
         .max(50, { error: "Page size cannot be higher than 50" })
+        .default(10),
 }).superRefine((data, ctx) => {
     const offset = data.pageIndex * data.pageSize;
     if (offset > MaxOffset) {
