@@ -7,6 +7,8 @@ const INVALID_OPERATION = "invalid_operation";
 const NOT_FOUND = "not_found";
 const ABORTED = "aborted";
 
+export const DataServiceUrl = process.env["DATA_SERVICE_URL"] || "localhost:8080";
+
 export async function executeGrpcCall<T>(grpcPromise: Promise<T>): Promise<T> {
   try {
     return await grpcPromise;

@@ -33,7 +33,15 @@ export const makeGetArticlesPendingReviewController = (client: ReviewGrpcClient,
 
         res.status(200).json(
             {
-                articlesPending: response.articles_pending,
+                articlesPending: [
+                    ...response.articles_pending.map(article => ({
+                        id: article.article_id,
+                        title: article.title,
+                        authorName: article.author_name,
+                        category: article.category,
+                        submittedAt: article.submitted_at
+                    }))
+                ],
                 totalPending: response.total_pending,
                 currentPage: response.current_page,
                 pageCount: response.page_count,

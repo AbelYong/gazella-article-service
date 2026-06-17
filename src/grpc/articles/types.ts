@@ -22,6 +22,7 @@ export interface Category {
 export interface MyArticle {
   article_id: string;
   title: string;
+  cover_uri: string;
   status: string;
   category: string;
   published_at: string;
@@ -77,6 +78,7 @@ export interface SearchArticlesRequest {
 export interface ArticleEntry {
   id: string;
   title: string;
+  cover_uri: string;
   author_id: string;
   author_name: string;
   category_name: string;

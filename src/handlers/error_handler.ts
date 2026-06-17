@@ -13,7 +13,7 @@ export const globalErrorHandler = (
 
     if (err.name === "UnauthorizedError") {
         res.status(401).json({
-            error: "Access deniend",
+            error: "Access denied",
             message: err.message,
             code: "UNAUTHORIZED"
         });

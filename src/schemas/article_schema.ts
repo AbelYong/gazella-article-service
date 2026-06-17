@@ -1,4 +1,4 @@
-import z from "zod";
+import z, { uuidv4 } from "zod";
 import { MaxOffset, MaxPageIndex } from "../validators/pagination_util.js";
 
 export const ArticleIdSchema = z.object({
@@ -68,3 +68,10 @@ export const GetFeaturedArticlesSchema = z.object({
 });
 
 export type GetFeaturedArticlesInput = z.infer<typeof GetFeaturedArticlesSchema>
+
+export const DeletionByAuthorSchema = z.object({
+    authorId: uuidv4(),
+    articleId: z.uuidv4()
+});
+
+export type DeletionByAuthorInput = z.infer<typeof DeletionByAuthorSchema>

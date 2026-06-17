@@ -1,5 +1,21 @@
 import * as grpc from '@grpc/grpc-js';
 
+export interface GetDraftRequest {
+  article_id: string;
+}
+
+export interface GetDraftResponse {
+  id: string;
+  title: string;
+  cover_uri: string;
+  summary: string;
+  category_id: string;
+  category_name: string;
+  content: string;
+  status: string;
+  rejection_reason: string;
+}
+
 export interface SubmitDraftRequest {
   title: string;
   cover_uri: string;
@@ -45,6 +61,10 @@ export interface PublishDraftResponse {
 }
 
 export interface DraftServiceClient extends grpc.Client {
+  GetDraft(
+    request: GetDraftRequest,
+    callback: (error: grpc.ServiceError | null, respinse: GetDraftResponse) => void
+  ): grpc.ClientUnaryCall;
   SubmitDraft(
     request: SubmitDraftRequest,
     callback: (error: grpc.ServiceError | null, response: SubmitDraftResponse) => void

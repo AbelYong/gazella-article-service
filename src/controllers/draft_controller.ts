@@ -1,15 +1,53 @@
 import { Request, Response } from "express"
 import { DraftIdInput, DraftPublicationInput, DraftSubmissionInput, DraftUpdateInput } from "../schemas/draft_schema.js";
 import { isValidGazellaJson } from "../validators/article_validator.js";
-import { PublishDraftRequest, PublishDraftResponse, SubmitDraftRequest, SubmitDraftResponse, UpdateDraftRequest, UpdateDraftResponse } from "../grpc/drafts/types.js";
+import { GetDraftRequest, PublishDraftRequest, PublishDraftResponse, SubmitDraftRequest, SubmitDraftResponse, UpdateDraftRequest, UpdateDraftResponse } from "../grpc/drafts/types.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
 import { DraftGrpcClient } from "../grpc/drafts/client.js";
 import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
 import { Editor, Moderator, Organizer, Volunteer, WriteArticles } from "../security/authorizations.js";
+import { ArticleIdInput } from "../schemas/article_schema.js";
 
 type DraftService = {
     client: DraftGrpcClient,
     executeCall: ExecuteCall
+}
+
+export const makeGetDraftController = (client: DraftGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<ArticleIdInput>, res: Response) : Promise<void> => {
+        const auth: ControllerAuthorization = {
+            userId: req.auth?.sub,
+            roles: req.auth?.roles,
+            permissions: req.auth?.permissions,
+            allowedRoles: [Volunteer, Organizer, Editor, Moderator],
+            fineGrainedPermission: WriteArticles
+        };
+
+        const authResult = processAuthorization(auth);
+
+        if (authResult.statusCode !== 200) {
+            res.status(authResult.statusCode).json({ message: authResult.message, code: authResult.code });
+            return;
+        }
+
+        const request: GetDraftRequest = {
+            article_id: req.params.articleId
+        }
+
+        const response = await executeCall(client.getDraft(request));
+
+        res.status(200).json({
+            id: response.id,
+            title: response.title,
+            coverUri: response.cover_uri,
+            summary: response.summary,
+            categoryId: response.category_id,
+            categoryName: response.category_name,
+            content: response.content,
+            status: response.status,
+            rejectionReason: response.rejection_reason
+        });
+    }
 }
 
 export const makeSubmitDraftController = (client: DraftGrpcClient, executeCall: ExecuteCall) => {

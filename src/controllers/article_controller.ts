@@ -2,7 +2,7 @@ import { Request, Response } from "express"
 import { DeleteArticleRequest, GetArticleRequest, GetAuthorStatsRequest, GetCategoriesRequest, GetFeaturedArticlesRequest, GetMyArticlesRequest, GetPublishedArticlesRequest, SearchArticlesRequest } from '../grpc/articles/types.js';
 import { ArticleGrpcClient } from "../grpc/articles/client.js";
 import { ExecuteCall } from "../grpc/grpc_util.js";
-import { ArticleIdInput, GetFeaturedArticlesInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
+import { ArticleIdInput, DeletionByAuthorInput, GetFeaturedArticlesInput, GetPublishedArticlesInput, SearchArticlesInput } from "../schemas/article_schema.js";
 import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
 import { Editor, ManageArticles, Moderator } from "../security/authorizations.js";
 
@@ -29,7 +29,18 @@ export const makeGetMyArticlesController = (grpcClient: ArticleGrpcClient, execu
 
         const response = await executeCall(grpcClient.getMyArticles(request));
 
-        res.status(200).json({myArticles: response.my_articles});
+        res.status(200).json([
+            ...response.my_articles.map(article => ({
+                id: article.article_id,
+                title: article.title,
+                coverUri: article.cover_uri,
+                status: article.status,
+                category: article.category,
+                publishedAt: article.published_at,
+                likes: article.likes,
+                comments: article.comments
+            }))
+        ]);
     }
 }
 
@@ -56,7 +67,16 @@ export const makeGetArticleController = (client: ArticleGrpcClient, executeCall:
             authorPfpUri: response.author_pfp_uri,
             likesCount: response.likes_count,
             commentsCount: response.comments_count,
-            recentComments: response.recent_comments
+            recentComments: [
+                ...response.recent_comments.map(comment => ({
+                    id: comment.id,
+                    authorId: comment.author_id,
+                    authorName: comment.author_name,
+                    authorPfpUri: comment.author_pfp_uri,
+                    content: comment.content,
+                    postedAt: comment.posted_at 
+                }))
+            ]
         });
     }
 }
@@ -82,6 +102,7 @@ export const makeSearchArticlesController = (client: ArticleGrpcClient, executeC
                 ...response.entries.map(entry => ({
                     id: entry.id,
                     title: entry.title,
+                    coverUri: entry.cover_uri,
                     authorId: entry.author_id,
                     authorName: entry.author_name,
                     categoryName: entry.category_name,
@@ -169,6 +190,32 @@ export const makeDeleteArticleController = (client: ArticleGrpcClient, executeCa
     }
 }
 
+export const makeDeleteAsAuthorController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
+    return async (req: Request<DeletionByAuthorInput>, res: Response) : Promise<void> => {
+        const authorId = req.auth?.sub;
+
+        if (!authorId) {
+            res.status(401).json({ message: "Invalid Token or subject is missing (sub)", code: "MISSING_SUB" });
+            return;
+        }
+        
+        const isOwner = authorId === req.params.authorId;
+
+        if (!isOwner) {
+            res.status(403).json({ message: "Your sub and the authorId of the requested article to delete do not match", code: "FORBIDDEN" })
+            return;
+        }
+
+        const request: DeleteArticleRequest = {
+            article_id: req.params.articleId
+        }
+
+        const response = await executeCall(client.deleteArticle(request));
+
+        res.status(200).json(response);
+    }
+}
+
 export const makeGetAuthorStatsController = (client: ArticleGrpcClient, executeCall: ExecuteCall) => {
     return async (req: Request, res: Response) : Promise<void> => {
         const userId = req.auth?.sub;
@@ -215,18 +262,16 @@ export const makeGetFeaturedArticlesController = (client: ArticleGrpcClient, exe
 
         const response = await executeCall(client.getFeaturedArticles(request));
 
-        res.status(200).json({
-            featuredArticles: [
-                ...response.featured_articles.map(featured => ({
-                    id: featured.id,
-                    title: featured.title,
-                    coverUri: featured.cover_uri,
-                    authorId: featured.author_id,
-                    authorName: featured.author_name,
-                    authorPfpUri: featured.author_pfp_uri,
-                    summary: featured.summary 
-                }))
-            ]
-        });
+        res.status(200).json([
+            ...response.featured_articles.map(featured => ({
+                id: featured.id,
+                title: featured.title,
+                coverUri: featured.cover_uri,
+                authorId: featured.author_id,
+                authorName: featured.author_name,
+                authorPfpUri: featured.author_pfp_uri,
+                summary: featured.summary 
+            }))
+        ]);
     }
 }

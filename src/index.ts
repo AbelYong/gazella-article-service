@@ -3,7 +3,10 @@ import dotenv from "dotenv"
 import swaggerJsDoc from "swagger-jsdoc"
 import swaggerUi from "swagger-ui-express"
 import { swaggerOptions } from "./swagger.js"
-import routes from "./routes.js"
+import { ArticlesRouter } from "./routes/articles_routes.js"
+import { DraftsRouter } from "./routes/drafts_routes.js"
+import { InteractionsRouter } from "./routes/interactions_routes.js"
+import { ReviewsRouter } from "./routes/reviews_routes.js"
 import { globalErrorHandler } from "./handlers/error_handler.js"
 
 dotenv.config();
@@ -21,7 +24,10 @@ async function startServer() {
             app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
         }
 
-        app.use("/", routes);
+        app.use(ArticlesRouter);
+        app.use(DraftsRouter);
+        app.use(InteractionsRouter);
+        app.use(ReviewsRouter);
 
         app.use(globalErrorHandler);
 

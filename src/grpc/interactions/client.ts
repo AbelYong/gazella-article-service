@@ -12,6 +12,8 @@ import {
   LikeArticleResponse,
   RevokeLikeRequest,
   RevokeLikeResponse,
+  CheckIfAlreadyLikedRequest,
+  CheckIfAlreadyLikedResponse,
   InteractionServiceClient 
 } from "./types.js";
 
@@ -73,6 +75,14 @@ export class InteractionGrpcClient {
   public revokeLike(request: RevokeLikeRequest): Promise<RevokeLikeResponse> {
     return new Promise((resolve, reject) => {
       this.client.RevokeLike(request, (error, response) => {
+        error ? reject(error) : resolve(response);
+      });
+    });
+  }
+
+  public checkIfAlreadyLiked(request: CheckIfAlreadyLikedRequest): Promise<CheckIfAlreadyLikedResponse> {
+    return new Promise((resolve, reject) => {
+      this.client.CheckIfAlreadyLiked(request, (error, response) => {
         error ? reject(error) : resolve(response);
       });
     });

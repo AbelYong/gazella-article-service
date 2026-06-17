@@ -10,6 +10,7 @@ export interface CommentArticleRequest {
 
 export interface CommentArticleResponse {
   success: boolean;
+  comment_id: string;
   posted_at: string;
 }
 
@@ -66,6 +67,15 @@ export interface RevokeLikeResponse {
   current_likes: number;
 }
 
+export interface CheckIfAlreadyLikedRequest {
+  article_id: string;
+  author_id: string;
+}
+
+export interface CheckIfAlreadyLikedResponse {
+  is_already_liked: boolean;
+}
+
 export interface InteractionServiceClient extends grpc.Client {
   CommentArticle(
     request: CommentArticleRequest,
@@ -86,5 +96,9 @@ export interface InteractionServiceClient extends grpc.Client {
   RevokeLike(
     request: RevokeLikeRequest,
     callback: (error: grpc.ServiceError | null, response: RevokeLikeResponse) => void
+  ): grpc.ClientUnaryCall;
+  CheckIfAlreadyLiked(
+    request: CheckIfAlreadyLikedRequest,
+    callback: (error: grpc.ServiceError | null, response: CheckIfAlreadyLikedResponse) => void
   ): grpc.ClientUnaryCall;
 }

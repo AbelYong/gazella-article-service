@@ -4,7 +4,10 @@ import { MaxOffset, MaxPageIndex } from "../validators/pagination_util.js";
 export const CommentArticleSchema = z.object({
     authorName: z.string().trim()
         .max(128, {error: "Author Name cannot be longer than 128 characters"}),
-    authorPfpUri: z.url().optional(),
+    authorPfpUri: z.string().trim()
+        .pipe(
+            z.union([z.url(), z.literal("").transform(() => undefined)])
+        ).optional(),
     content: z.string().trim()
         .max(1000, {error: "Comment content cannot be longer than a 1000 characters"})
 });
@@ -41,3 +44,11 @@ export const GetCommentsSchema = z.object({
 });
 
 export type GetCommentsInput = z.infer<typeof GetCommentsSchema>
+
+export const DeleteOwnCommentSchema = z.object({
+    authorId: z.uuidv4(),
+    articleId: z.uuidv4(),
+    commentId: z.uuidv4()
+});
+
+export type DeleteOwnCommentInput = z.infer<typeof DeleteOwnCommentSchema>

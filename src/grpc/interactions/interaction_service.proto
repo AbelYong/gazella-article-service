@@ -10,6 +10,7 @@ service InteractionService {
   rpc GetComments (GetCommentsRequest) returns (GetCommentsResponse);
   rpc LikeArticle (LikeArticleRequest) returns (LikeArticleResponse);
   rpc RevokeLike (RevokeLikeRequest) returns (RevokeLikeResponse);
+  rpc CheckIfAlreadyLiked (CheckIfAlreadyLikedRequest) returns (CheckIfAlreadyLikedResponse);
 }
 
 message CommentArticleRequest {
@@ -22,7 +23,8 @@ message CommentArticleRequest {
 
 message CommentArticleResponse {
   bool success = 1;
-  string posted_at = 2;
+  string comment_id = 2;
+  string posted_at = 3;
 }
 
 message DeleteCommentRequest {
@@ -65,7 +67,7 @@ message LikeArticleRequest {
 
 message LikeArticleResponse {
   string message = 1;
-  int32 current_likes = 2;
+  int32 current_likes = 3;
 }
 
 message RevokeLikeRequest {
@@ -76,4 +78,13 @@ message RevokeLikeRequest {
 message RevokeLikeResponse {
   string message = 1;
   int32 current_likes = 2;
+}
+
+message CheckIfAlreadyLikedRequest {
+  string article_id = 1;
+  string author_id = 2;
+}
+
+message CheckIfAlreadyLikedResponse {
+  bool is_already_liked = 1;
 }

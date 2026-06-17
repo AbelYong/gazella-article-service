@@ -10,7 +10,9 @@
     "build": "tsup --config src/tsup.config.ts",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
@@ -19,11 +21,13 @@
     "@types/swagger-ui-express": "^4.1.8",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.3",
     "@grpc/proto-loader": "^0.8.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-jwt": "^8.5.1",

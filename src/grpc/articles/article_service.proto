@@ -29,11 +29,12 @@ message GetCategoriesResponse {
 message MyArticle {
   string article_id = 1;
   string title = 2;
-  string status = 3;
-  string category = 4;
-  string published_at = 5;
-  int32 likes = 6;
-  int32 comments = 7;
+  string cover_uri = 3;
+  string status = 4;
+  string category = 5;
+  string published_at = 6;
+  int32 likes = 7;
+  int32 comments = 8;
 }
 
 message GetMyArticlesRequest {
@@ -92,12 +93,13 @@ message SearchArticlesRequest {
 message ArticleEntry {
   string id = 1;
   string title = 2;
-  string author_id = 3;
-  string author_name = 4;
-  string category_name = 5;
-  string summary = 6;
-  string published_at = 7;
-  string last_updated_at = 8;
+  string cover_uri = 3;
+  string author_id = 4;
+  string author_name = 5;
+  string category_name = 6;
+  string summary = 7;
+  string published_at = 8;
+  string last_updated_at = 9;
 }
 
 message SearchArticlesResponse {
