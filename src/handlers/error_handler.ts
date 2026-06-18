@@ -5,10 +5,14 @@ export const globalErrorHandler = (
     err: any,
     _req: Request,
     res: Response,
-    _next: NextFunction
+    next: NextFunction
 ): void => {
     if (process.env["NODE_ENV"] !== "test") {
         console.error("Error:", err);
+    }
+
+    if (res.headersSent) {
+        return next(err);
     }
 
     if (err.name === "UnauthorizedError") {

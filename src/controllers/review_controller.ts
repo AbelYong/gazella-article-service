@@ -6,6 +6,16 @@ import { ControllerAuthorization, processAuthorization } from "../security/auth_
 import { Editor, ManageArticles, Moderator } from "../security/authorizations.js";
 import { GetArticlesPendingReviewInput, RejectArticleInput } from '../schemas/review_schema.js';
 import { ReviewGrpcClient } from "../grpc/reviews/client.js";
+import { ArticleGrpcClient } from "../grpc/articles/client.js";
+import { RabbitMQPublisherService } from "../messaging/rabbitmq.js";
+import { GetArticleRequest } from "../grpc/articles/types.js";
+import { ArticlePublishedOutput, ArticleRejectedOutput } from "../messaging/message_schemas.js";
+
+export type PublicationClients = {
+    reviewClient: ReviewGrpcClient,
+    articleClient: ArticleGrpcClient
+    publisher: RabbitMQPublisherService
+}
 
 export const makeGetArticlesPendingReviewController = (client: ReviewGrpcClient, executeCall: ExecuteCall) => {
     return async (req: Request<{}, {}, {}, GetArticlesPendingReviewInput>, res: Response) : Promise<void> => {
@@ -51,7 +61,7 @@ export const makeGetArticlesPendingReviewController = (client: ReviewGrpcClient,
     }
 }
 
-export const makeApproveArticleController = (client: ReviewGrpcClient, executeCall: ExecuteCall) => {
+export const makeApproveArticleController = (clients: PublicationClients, executeCall: ExecuteCall) => {
     return async (req: Request<ArticleIdInput>, res: Response) : Promise<void> => {
         const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
@@ -73,13 +83,35 @@ export const makeApproveArticleController = (client: ReviewGrpcClient, executeCa
             reviewed_by_id: req.auth?.sub as string
         }
 
-        const response = await executeCall(client.approveArticle(request));
+        const response = await executeCall(clients.reviewClient.approveArticle(request));
 
         res.status(200).json({ message: response.message, status: response.article_status });
+
+        publishArticlePublishedMessage(req.params.articleId, clients, executeCall)
+            .catch(error => {
+                console.error(`[Background task error] Failed to publish approval message for article ${req.params.articleId}`, error);
+            });
     }
 }
 
-export const makeRejectArticleController = (client: ReviewGrpcClient, executeCall: ExecuteCall) => {
+async function publishArticlePublishedMessage(articleId: string, clients: PublicationClients, executeCall: ExecuteCall) {
+    const request: GetArticleRequest = {
+        id: articleId
+    }
+    
+    const article = await executeCall(clients.articleClient.getArticle(request));
+
+    const message: ArticlePublishedOutput = {
+        articleId: article.id,
+        authorId: article.author_id,
+        title: article.title,
+        authorName: article.author_name
+    }
+
+    clients.publisher.publish("article.published", message);
+}
+
+export const makeRejectArticleController = (clients: PublicationClients, executeCall: ExecuteCall) => {
     return async (req: Request<ArticleIdInput, {}, RejectArticleInput>, res: Response) : Promise<void> => {
         const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
@@ -102,8 +134,30 @@ export const makeRejectArticleController = (client: ReviewGrpcClient, executeCal
             rejection_reason: req.body.rejectionReason
         }
 
-        const response = await executeCall(client.rejectArticle(request));
+        const response = await executeCall(clients.reviewClient.rejectArticle(request));
 
         res.status(200).json({ message: response.message, status: response.article_status });
+
+        publishArticleRejectedMessage(req.params.articleId, clients, executeCall)
+            .catch(error => {
+                console.error(`[Background task error] Failed to publish rejection message for article ${req.params.articleId}`, error);
+            });
     }
+}
+
+async function publishArticleRejectedMessage(articleId: string, clients: PublicationClients, executeCall: ExecuteCall) {
+    const request: GetArticleRequest = {
+        id: articleId
+    }
+    
+    const article = await executeCall(clients.articleClient.getArticle(request));
+
+    const message: ArticleRejectedOutput = {
+        articleId: article.id,
+        authorId: article.author_id,
+        title: article.title,
+        authorName: article.author_name
+    }
+
+    clients.publisher.publish("article.rejected", message);
 }

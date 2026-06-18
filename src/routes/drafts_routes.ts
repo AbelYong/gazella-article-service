@@ -7,6 +7,7 @@ import { DraftIdSchema, DraftPublicationSchema, DraftSubmissionSchema, DraftUpda
 import { DraftGrpcClient } from "../grpc/drafts/client.js";
 import { executeGrpcCall, DataServiceUrl } from "../grpc/grpc_util.js";
 import { ArticleIdSchema } from "../schemas/article_schema.js";
+import { rabbitMQPublisher } from "../messaging/rabbitmq.js";
 
 const router = Router();
 
@@ -15,7 +16,7 @@ const draftClient = new DraftGrpcClient(DataServiceUrl);
 const getDraft = makeGetDraftController(draftClient, executeGrpcCall);
 const submitDraft = makeSubmitDraftController(draftClient, executeGrpcCall);
 const updateDraft = makeUpdateDraftController(draftClient, executeGrpcCall);
-const publishDraft = makePublishDraftController(draftClient, executeGrpcCall);
+const publishDraft = makePublishDraftController(draftClient, rabbitMQPublisher, executeGrpcCall);
 
 router.get("/drafts/:articleId", requireAuth, validateParams(ArticleIdSchema), asyncHandler(getDraft));
 

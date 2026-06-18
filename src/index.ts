@@ -8,6 +8,7 @@ import { DraftsRouter } from "./routes/drafts_routes.js"
 import { InteractionsRouter } from "./routes/interactions_routes.js"
 import { ReviewsRouter } from "./routes/reviews_routes.js"
 import { globalErrorHandler } from "./handlers/error_handler.js"
+import { rabbitMQPublisher } from "./messaging/rabbitmq.js"
 
 dotenv.config();
 
@@ -23,6 +24,8 @@ async function startServer() {
         if (process.env["NODE_ENV"] === "development") {
             app.use("/docs", swaggerUi.serve, swaggerUi.setup(specs));
         }
+
+        await rabbitMQPublisher.connect();
 
         app.use(ArticlesRouter);
         app.use(DraftsRouter);

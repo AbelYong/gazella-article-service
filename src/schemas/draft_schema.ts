@@ -44,7 +44,7 @@ export const DraftPublicationSchema = z.object({
         ).optional(),
     summary: z.string().trim().max(500, {error: "Content cannot be longer than 500 characters" }),
     categoryId: z.uuidv4(),
-    authorName: z.string().trim().max(64, {error: "Author Name cannot be longer than 64 characters"}),
+    authorName: z.string().trim().max(128, {error: "Author Name cannot be longer than 128 characters"}),
     authorPfpUri: z.string().trim()
         .pipe(
             z.union([z.url(), z.literal("").transform(() => undefined)])

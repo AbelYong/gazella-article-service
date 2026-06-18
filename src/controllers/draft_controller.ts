@@ -7,6 +7,8 @@ import { DraftGrpcClient } from "../grpc/drafts/client.js";
 import { ControllerAuthorization, processAuthorization } from "../security/auth_util.js";
 import { Editor, Moderator, Organizer, Volunteer, WriteArticles } from "../security/authorizations.js";
 import { ArticleIdInput } from "../schemas/article_schema.js";
+import { RabbitMQPublisherService } from "../messaging/rabbitmq.js";
+import { DraftPublishedOutput } from "../messaging/message_schemas.js";
 
 type DraftService = {
     client: DraftGrpcClient,
@@ -151,7 +153,7 @@ async function updateDraft(service: DraftService, draftId: string, draft: DraftU
     return response;
 }
 
-export const makePublishDraftController = (client: DraftGrpcClient, executeCall: ExecuteCall) => {
+export const makePublishDraftController = (client: DraftGrpcClient, publisher: RabbitMQPublisherService, executeCall: ExecuteCall) => {
     return async (req: Request<DraftIdInput, {}, DraftPublicationInput, {}>, res: Response) : Promise<void> => {
         const auth: ControllerAuthorization = {
             userId: req.auth?.sub,
@@ -179,7 +181,16 @@ export const makePublishDraftController = (client: DraftGrpcClient, executeCall:
 
         const response = await publishDraft({client, executeCall}, draftId, draftData);
 
+        const message: DraftPublishedOutput = {
+            draftId: draftId,
+            title: draftData.title,
+            authorName: draftData.authorName,
+            summary: draftData.summary,
+        }
+
         res.status(200).json({ message: response.message });
+
+        publisher.publish("draft.published", message);
     }
 }
 
