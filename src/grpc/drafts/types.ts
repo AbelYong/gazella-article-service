@@ -63,7 +63,7 @@ export interface PublishDraftResponse {
 export interface DraftServiceClient extends grpc.Client {
   GetDraft(
     request: GetDraftRequest,
-    callback: (error: grpc.ServiceError | null, respinse: GetDraftResponse) => void
+    callback: (error: grpc.ServiceError | null, response: GetDraftResponse) => void
   ): grpc.ClientUnaryCall;
   SubmitDraft(
     request: SubmitDraftRequest,
